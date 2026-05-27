@@ -13,10 +13,11 @@ This project demonstrates healthcare-focused REST API documentation, SMART on FH
 - [Error Handling](errors.md)
 
 ### Clinical Endpoints
-- Appointments
-- Medications
-- Lab Results
-- Secure Messaging
+
+- [GET /appointments](endpoints/appointments.md)
+- [GET /medications](endpoints/medications.md)
+- [GET /lab-results](endpoints/lab-results.md)
+- [POST /messages](endpoints/messages.md)
 
 ---
 
@@ -65,3 +66,16 @@ https://api.ehrportal.com/v1
 ## Response Format
 
 All responses are returned in JSON format using FHIR-compatible resource structures.
+
+---
+
+## Healthcare Compliance Considerations
+
+This project demonstrates healthcare-focused API documentation patterns including:
+
+- SMART on FHIR authorization concepts
+- OAuth 2.0 authentication workflows
+- HIPAA-aware documentation language
+- Protected health information (PHI) considerations
+- Clinical terminology documentation
+- Healthcare interoperability concepts
