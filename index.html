@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EHR Patient API Documentation Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: #0f1b2d;
+      --panel-2: #14243a;
+      --panel-3: #1a2e49;
+      --border: #263a55;
+      --border-hi: #3d5b7d;
+      --blue: #4db6ff;
+      --blue-dim: #143c5c;
+      --teal: #2dd4bf;
+      --teal-dim: #10443d;
+      --green: #35c46b;
+      --green-dim: #123b25;
+      --amber: #f5b84b;
+      --amber-dim: #513a12;
+      --red: #f87171;
+      --red-dim: #4b1515;
+      --text: #c9d7e8;
+      --text-dim: #8192a8;
+      --text-hi: #f0f7ff;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Inter', sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: radial-gradient(circle at top right, rgba(77, 182, 255, .08), transparent 35%), var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      opacity: .45;
+      z-index: -1;
+    }
+
+    .status-bar {
+      background: rgba(15, 27, 45, .96);
+      border-bottom: 1px solid var(--border);
+      padding: 7px 24px;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(10px);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .sys-id { color: var(--teal); letter-spacing: .12em; font-weight: 600; }
+    .status-items { display: flex; gap: 18px; flex: 1; flex-wrap: wrap; }
+    .status-item { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .dot.amber { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+    .clock { margin-left: auto; color: var(--blue); }
+
+    header {
+      background: rgba(15, 27, 45, .94);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 32px;
+      z-index: 40;
+      backdrop-filter: blur(10px);
+    }
+
+    .header-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 0 24px;
+    }
+
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      width: 36px; height: 36px;
+      border: 1px solid var(--blue);
+      background: var(--blue-dim);
+      color: var(--blue);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .logo-name { color: var(--text-hi); font-weight: 800; font-size: 15px; letter-spacing: .02em; }
+    .logo-sub { color: var(--text-dim); font-family: var(--mono); font-size: 10px; }
+
+    nav { margin-left: auto; display: flex; gap: 4px; flex-wrap: wrap; }
+    nav a {
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      transition: .16s ease;
+    }
+    nav a:hover, nav a.active { color: var(--blue); background: var(--panel-2); }
+
+    .layout {
+      max-width: 1240px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      min-height: calc(100vh - 94px);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: sticky;
+      top: 94px;
+      height: calc(100vh - 94px);
+      overflow-y: auto;
+    }
+    .sidebar-section { margin-bottom: 24px; }
+    .sidebar-heading {
+      padding: 0 20px 8px;
+      margin-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+    }
+    .sidebar a {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-dim);
+      padding: 8px 20px;
+      border-left: 3px solid transparent;
+      transition: .16s ease;
+      font-size: 13px;
+    }
+    .sidebar a:hover, .sidebar a.active { color: var(--blue); background: rgba(77, 182, 255, .07); border-left-color: var(--blue); }
+    .doc-id { font-family: var(--mono); font-size: 10px; color: var(--text-dim); }
+
+    main { min-width: 0; }
+    .view { display: none; }
+    .view.active { display: block; animation: fadeIn .25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(20, 36, 58, .98), rgba(15, 27, 45, .98));
+      border-bottom: 1px solid var(--border);
+      padding: 44px 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      top: -70px; right: -70px;
+      width: 320px; height: 320px;
+      border: 1px solid rgba(77, 182, 255, .14);
+      border-radius: 50%;
+      box-shadow: inset 0 0 60px rgba(77, 182, 255, .05);
+    }
+    .eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: .18em; color: var(--teal); text-transform: uppercase; margin-bottom: 12px; }
+    h1 { color: var(--text-hi); font-size: 34px; line-height: 1.08; letter-spacing: -.04em; margin-bottom: 12px; max-width: 780px; }
+    h1 span { color: var(--blue); }
+    .hero p { max-width: 710px; color: var(--text-dim); font-size: 15px; margin-bottom: 24px; }
+    .hero-meta { display: flex; gap: 14px; flex-wrap: wrap; }
+    .meta-card {
+      border: 1px solid var(--border);
+      background: rgba(7, 17, 31, .42);
+      border-radius: 8px;
+      padding: 10px 12px;
+      min-width: 135px;
+    }
+    .meta-card .label { display: block; color: var(--text-dim); font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: .12em; }
+    .meta-card .value { display: block; color: var(--blue); font-family: var(--mono); font-size: 12px; margin-top: 2px; }
+
+    .notice {
+      margin: 24px 48px;
+      padding: 14px 16px;
+      border: 1px solid rgba(245, 184, 75, .35);
+      border-left: 4px solid var(--amber);
+      background: rgba(245, 184, 75, .08);
+      border-radius: 0 8px 8px 0;
+      display: flex;
+      gap: 12px;
+    }
+    .notice.danger { border-color: rgba(248, 113, 113, .35); border-left-color: var(--red); background: rgba(248, 113, 113, .07); }
+    .notice strong { color: var(--amber); }
+    .notice.danger strong { color: var(--red); }
+
+    .section { padding: 34px 48px; border-bottom: 1px solid var(--border); }
+    .section-label { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; color: var(--teal); text-transform: uppercase; margin-bottom: 8px; }
+    h2 { color: var(--text-hi); font-size: 22px; margin-bottom: 18px; letter-spacing: -.02em; }
+    h3 { color: var(--blue); font-size: 15px; text-transform: uppercase; letter-spacing: .08em; margin: 24px 0 12px; }
+    p { margin-bottom: 12px; }
+
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+    .nav-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      text-decoration: none;
+      color: var(--text);
+      transition: .18s ease;
+      display: flex;
+      flex-direction: column;
+      min-height: 140px;
+    }
+    .nav-card:hover { transform: translateY(-2px); border-color: var(--blue); background: var(--panel-2); box-shadow: 0 10px 30px rgba(0, 0, 0, .22); }
+    .card-icon { color: var(--teal); font-family: var(--mono); font-size: 11px; margin-bottom: 10px; }
+    .card-title { color: var(--text-hi); font-weight: 800; margin-bottom: 8px; }
+    .card-desc { color: var(--text-dim); font-size: 13px; }
+    .card-id { margin-top: auto; color: var(--text-dim); font-family: var(--mono); font-size: 10px; padding-top: 12px; }
+
+    .table-wrap { overflow-x: auto; margin: 16px 0; border: 1px solid var(--border); border-radius: 10px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: var(--panel-2); color: var(--text-dim); font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .1em; }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: rgba(255,255,255,.018); }
+
+    code, .mono-tag {
+      font-family: var(--mono);
+      color: var(--blue);
+      background: rgba(77, 182, 255, .1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .code-block {
+      background: #050b14;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--blue-dim);
+      border-radius: 0 8px 8px 0;
+      margin: 14px 0;
+      padding: 16px 18px;
+      overflow-x: auto;
+    }
+    pre { font-family: var(--mono); font-size: 12px; color: var(--text); line-height: 1.7; white-space: pre; }
+
+    .endpoint {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+    .endpoint-header {
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--border);
+      padding: 13px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .method { font-family: var(--mono); font-size: 11px; font-weight: 800; padding: 4px 9px; border-radius: 4px; letter-spacing: .06em; }
+    .method-get { color: var(--green); background: var(--green-dim); border: 1px solid rgba(53,196,107,.28); }
+    .method-post { color: var(--amber); background: var(--amber-dim); border: 1px solid rgba(245,184,75,.28); }
+    .endpoint-path { font-family: var(--mono); color: var(--text-hi); }
+    .endpoint-body { padding: 16px; }
+
+    .badge { display: inline-block; font-family: var(--mono); font-size: 10px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--border); }
+    .badge-blue { color: var(--blue); background: rgba(77,182,255,.1); border-color: var(--blue-dim); }
+    .badge-green { color: var(--green); background: var(--green-dim); border-color: rgba(53,196,107,.28); }
+    .badge-amber { color: var(--amber); background: var(--amber-dim); border-color: rgba(245,184,75,.28); }
+
+    .procedure { border: 1px solid var(--border); background: var(--panel); border-radius: 10px; overflow: hidden; margin: 16px 0; }
+    .procedure-header { padding: 11px 16px; background: var(--panel-2); border-bottom: 1px solid var(--border); color: var(--teal); font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; }
+    .step { display: flex; gap: 13px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    .step:last-child { border-bottom: none; }
+    .step-num { width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; flex-shrink: 0; background: var(--blue-dim); color: var(--blue); font-family: var(--mono); font-size: 11px; font-weight: 700; }
+
+    .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); overflow-x: auto; margin-top: 4px; }
+    .tab-btn { border: none; background: transparent; color: var(--text-dim); padding: 13px 16px; cursor: pointer; text-transform: uppercase; letter-spacing: .06em; font-size: 12px; font-weight: 800; border-bottom: 2px solid transparent; white-space: nowrap; }
+    .tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .tab-panel { display: none; padding-top: 18px; }
+    .tab-panel.active { display: block; }
+
+    footer { border-top: 1px solid var(--border); background: var(--panel); padding: 22px 48px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--text-dim); font-family: var(--mono); font-size: 10px; }
+
+    @media (max-width: 800px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .header-inner { height: auto; padding: 14px 20px; flex-direction: column; align-items: flex-start; }
+      header { top: 32px; }
+      nav { margin-left: 0; }
+      .hero, .section { padding: 28px 20px; }
+      .notice { margin: 18px 20px; }
+      .status-bar { padding: 7px 12px; }
+      .clock { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="status-bar">
+    <span class="sys-id">EHR PATIENT API v1.0</span>
+    <span>|</span>
+    <div class="status-items">
+      <div class="status-item"><span class="dot"></span><span>FHIR R4: COMPATIBLE</span></div>
+      <div class="status-item"><span class="dot"></span><span>OAUTH 2.0: ENABLED</span></div>
+      <div class="status-item"><span class="dot amber"></span><span>PHI ACCESS: RESTRICTED</span></div>
+      <div class="status-item"><span class="dot"></span><span>SMART ON FHIR: READY</span></div>
+    </div>
+    <span class="clock" id="clock">--:--:-- UTC</span>
+  </div>
+
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">EHR</div>
+        <div>
+          <div class="logo-name">PatientConnect API</div>
+          <div class="logo-sub">Healthcare Developer Documentation</div>
+        </div>
+      </div>
+      <nav>
+        <a href="#home" class="active" onclick="showView('home', this)">Home</a>
+        <a href="#getting-started" onclick="showView('getting-started', this)">Getting Started</a>
+        <a href="#auth" onclick="showView('auth', this)">Authentication</a>
+        <a href="#endpoints" onclick="showView('endpoints', this)">Endpoints</a>
+        <a href="#errors" onclick="showView('errors', this)">Errors</a>
+        <a href="#glossary" onclick="showView('glossary', this)">Glossary</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Portal</div>
+        <a class="active" href="#home" onclick="showView('home', null); return false;">Overview <span class="doc-id">EHR-001</span></a>
+        <a href="#getting-started" onclick="showView('getting-started', null); return false;">Getting Started <span class="doc-id">EHR-002</span></a>
+        <a href="#auth" onclick="showView('auth', null); return false;">Authentication <span class="doc-id">EHR-003</span></a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Clinical APIs</div>
+        <a href="#endpoints" onclick="showView('endpoints', null); return false;">Appointments <span class="doc-id">API-101</span></a>
+        <a href="#endpoints" onclick="showView('endpoints', null); return false;">Medications <span class="doc-id">API-102</span></a>
+        <a href="#endpoints" onclick="showView('endpoints', null); return false;">Lab Results <span class="doc-id">API-103</span></a>
+        <a href="#endpoints" onclick="showView('endpoints', null); return false;">Messages <span class="doc-id">API-104</span></a>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Reference</div>
+        <a href="#errors" onclick="showView('errors', null); return false;">Error Handling <span class="doc-id">REF-201</span></a>
+        <a href="#glossary" onclick="showView('glossary', null); return false;">Glossary <span class="doc-id">REF-202</span></a>
+      </div>
+    </aside>
+
+    <main>
+      <section id="view-home" class="view active">
+        <div class="hero">
+          <div class="eyebrow">EHR-001 // Developer Documentation Portal</div>
+          <h1>EHR Patient API<br><span>Healthcare Interoperability Documentation</span></h1>
+          <p>Developer-focused documentation for a fictional patient-facing EHR API. This portal demonstrates SMART on FHIR authentication, HIPAA-aware documentation language, clinical endpoint references, JSON examples, and healthcare information architecture.</p>
+          <div class="hero-meta">
+            <div class="meta-card"><span class="label">Standard</span><span class="value">SMART on FHIR</span></div>
+            <div class="meta-card"><span class="label">Auth</span><span class="value">OAuth 2.0</span></div>
+            <div class="meta-card"><span class="label">Format</span><span class="value">FHIR JSON</span></div>
+            <div class="meta-card"><span class="label">Audience</span><span class="value">Developers</span></div>
+          </div>
+        </div>
+
+        <div class="notice danger"><span>⚠</span><p><strong>PHI Notice:</strong> This is a portfolio documentation project using fictional sample data. Real healthcare systems must protect protected health information according to organizational privacy, security, and compliance requirements.</p></div>
+
+        <div class="section">
+          <div class="section-label">Quick Navigation</div>
+          <h2>Explore the Documentation</h2>
+          <div class="card-grid">
+            <a class="nav-card" href="#getting-started" onclick="showView('getting-started', null); return false;"><span class="card-icon">▶ EHR-002</span><span class="card-title">Getting Started</span><span class="card-desc">Register an app, request scopes, authorize a patient, and make your first API call.</span><span class="card-id">GETTING-STARTED.md</span></a>
+            <a class="nav-card" href="#auth" onclick="showView('auth', null); return false;"><span class="card-icon">◆ EHR-003</span><span class="card-title">Authentication</span><span class="card-desc">OAuth 2.0 authorization and SMART on FHIR scope examples for patient data.</span><span class="card-id">AUTHENTICATION.md</span></a>
+            <a class="nav-card" href="#endpoints" onclick="showView('endpoints', null); return false;"><span class="card-icon">⬡ API-100</span><span class="card-title">Clinical Endpoints</span><span class="card-desc">Appointments, medications, lab results, and secure messaging endpoint references.</span><span class="card-id">/endpoints</span></a>
+            <a class="nav-card" href="#errors" onclick="showView('errors', null); return false;"><span class="card-icon">⚑ REF-201</span><span class="card-title">Error Handling</span><span class="card-desc">Healthcare-specific errors including consent required and restricted access scenarios.</span><span class="card-id">ERRORS.md</span></a>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-label">System Context</div>
+          <h2>API Workflow</h2>
+          <div class="code-block"><pre>Patient Application
+        │
+        ▼
+OAuth 2.0 Authorization
+        │
+        ▼
+SMART on FHIR Scope Validation
+        │
+        ▼
+EHR Patient API
+        │
+        ▼
+Clinical Data Store
+        │
+        ▼
+FHIR-compatible JSON Response</pre></div>
+          <h3>Healthcare Compliance Considerations</h3>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Concept</th><th>Documentation Relevance</th></tr></thead>
+              <tbody>
+                <tr><td><code>PHI</code></td><td>Patient health data should be handled with clear privacy and security warnings.</td></tr>
+                <tr><td><code>Minimum Necessary</code></td><td>Applications should request only the scopes needed for the user task.</td></tr>
+                <tr><td><code>Consent</code></td><td>Some resources may require explicit patient authorization before access.</td></tr>
+                <tr><td><code>Audit Logging</code></td><td>Access to clinical data should be traceable in production healthcare systems.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-getting-started" class="view">
+        <div class="hero"><div class="eyebrow">EHR-002 // Developer Onboarding</div><h1>Getting Started<br><span>Make Your First Patient API Request</span></h1><p>This guide shows developers how to register an application, request authorization, receive an access token, and retrieve appointment data.</p></div>
+        <div class="section">
+          <div class="procedure">
+            <div class="procedure-header">Developer onboarding workflow</div>
+            <div class="step"><div class="step-num">1</div><div><strong>Register your application.</strong> Configure a client ID, redirect URI, and approved SMART on FHIR scopes.</div></div>
+            <div class="step"><div class="step-num">2</div><div><strong>Request authorization.</strong> Redirect the patient to approve access to selected clinical resources.</div></div>
+            <div class="step"><div class="step-num">3</div><div><strong>Receive access token.</strong> Use the token in the Authorization header for API calls.</div></div>
+            <div class="step"><div class="step-num">4</div><div><strong>Make your first request.</strong> Retrieve appointments using <span class="mono-tag">GET /appointments</span>.</div></div>
+          </div>
+          <h3>Example Request</h3>
+          <div class="code-block"><pre>curl -X GET https://api.ehrportal.com/v1/appointments \
+-H "Authorization: Bearer ACCESS_TOKEN"</pre></div>
+        </div>
+      </section>
+
+      <section id="view-auth" class="view">
+        <div class="hero"><div class="eyebrow">EHR-003 // Authentication</div><h1>OAuth 2.0 and<br><span>SMART on FHIR Authorization</span></h1><p>Applications must request an access token with the appropriate scopes before accessing patient health data.</p></div>
+        <div class="section">
+          <h2>Authorization Header</h2>
+          <div class="code-block"><pre>Authorization: Bearer ACCESS_TOKEN</pre></div>
+          <h3>Example Scopes</h3>
+          <div class="table-wrap"><table><thead><tr><th>Scope</th><th>Purpose</th></tr></thead><tbody><tr><td><code>patient/Appointment.read</code></td><td>Read appointment data</td></tr><tr><td><code>patient/MedicationRequest.read</code></td><td>Read medication records</td></tr><tr><td><code>patient/Observation.read</code></td><td>Read lab results and observations</td></tr><tr><td><code>patient/Communication.write</code></td><td>Send secure messages</td></tr></tbody></table></div>
+          <div class="notice"><span>ⓘ</span><p><strong>Security Note:</strong> Access tokens should never be exposed in public repositories, browser logs, or client-side source code.</p></div>
+        </div>
+      </section>
+
+      <section id="view-endpoints" class="view">
+        <div class="hero"><div class="eyebrow">API-100 // Clinical Endpoint Reference</div><h1>Clinical Data<br><span>Endpoint Documentation</span></h1><p>Endpoint reference for appointment, medication, lab result, and secure messaging workflows.</p></div>
+        <div class="section">
+          <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab(this, 'appointments')">Appointments</button>
+            <button class="tab-btn" onclick="switchTab(this, 'medications')">Medications</button>
+            <button class="tab-btn" onclick="switchTab(this, 'labs')">Lab Results</button>
+            <button class="tab-btn" onclick="switchTab(this, 'messages')">Messages</button>
+          </div>
+
+          <div id="appointments" class="tab-panel active">
+            <div class="endpoint"><div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/appointments</span><span class="badge badge-blue">patient/Appointment.read</span></div><div class="endpoint-body"><p>Retrieve upcoming and past patient appointment information.</p><div class="code-block"><pre>{
+  "appointments": [
+    {
+      "appointment_id": "APT-1001",
+      "provider": "Dr. Sarah Johnson",
+      "department": "Cardiology",
+      "date": "2026-06-10",
+      "time": "09:30 AM",
+      "location": "Houston Medical Center"
+    }
+  ]
+}</pre></div></div></div>
+          </div>
+
+          <div id="medications" class="tab-panel">
+            <div class="endpoint"><div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/medications</span><span class="badge badge-blue">patient/MedicationRequest.read</span></div><div class="endpoint-body"><p>Retrieve active and past patient medication records.</p><div class="code-block"><pre>{
+  "medications": [
+    {
+      "medication_id": "MED-1001",
+      "name": "Lisinopril",
+      "dosage": "10 mg",
+      "frequency": "Once daily",
+      "status": "Active"
+    }
+  ]
+}</pre></div></div></div>
+          </div>
+
+          <div id="labs" class="tab-panel">
+            <div class="endpoint"><div class="endpoint-header"><span class="method method-get">GET</span><span class="endpoint-path">/lab-results</span><span class="badge badge-blue">patient/Observation.read</span></div><div class="endpoint-body"><p>Retrieve patient laboratory test results.</p><div class="code-block"><pre>{
+  "lab_results": [
+    {
+      "result_id": "LAB-1001",
+      "test_name": "Hemoglobin A1C",
+      "value": "6.1",
+      "unit": "%",
+      "reference_range": "4.0-5.6",
+      "status": "High"
+    }
+  ]
+}</pre></div></div></div>
+          </div>
+
+          <div id="messages" class="tab-panel">
+            <div class="endpoint"><div class="endpoint-header"><span class="method method-post">POST</span><span class="endpoint-path">/messages</span><span class="badge badge-amber">patient/Communication.write</span></div><div class="endpoint-body"><p>Send secure messages between patients and healthcare providers.</p><div class="code-block"><pre>{
+  "provider_id": "PROV-1001",
+  "subject": "Prescription Refill Request",
+  "message": "I would like to request a refill for my blood pressure medication."
+}</pre></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-errors" class="view">
+        <div class="hero"><div class="eyebrow">REF-201 // Error Handling</div><h1>Healthcare API<br><span>Error Handling Guide</span></h1><p>Standard HTTP status codes and healthcare-specific errors for consent, access restriction, and expired authorization scenarios.</p></div>
+        <div class="section">
+          <div class="table-wrap"><table><thead><tr><th>Status</th><th>Meaning</th><th>Healthcare Context</th></tr></thead><tbody><tr><td><code>400</code></td><td>Bad Request</td><td>Invalid payload or missing required field</td></tr><tr><td><code>401</code></td><td>Unauthorized</td><td>Missing or expired access token</td></tr><tr><td><code>403</code></td><td>Consent Required</td><td>Patient authorization or access permission is required</td></tr><tr><td><code>404</code></td><td>Not Found</td><td>Requested clinical resource is unavailable</td></tr><tr><td><code>500</code></td><td>Server Error</td><td>Unexpected platform issue</td></tr></tbody></table></div>
+          <h3>Example Error Response</h3><div class="code-block"><pre>{
+  "error": "Consent Required",
+  "message": "Patient consent is required before accessing lab results."
+}</pre></div>
+        </div>
+      </section>
+
+      <section id="view-glossary" class="view">
+        <div class="hero"><div class="eyebrow">REF-202 // Clinical Data Glossary</div><h1>Healthcare API<br><span>Glossary for Developers</span></h1><p>Plain-language definitions of healthcare interoperability and clinical data terms used throughout this documentation.</p></div>
+        <div class="section">
+          <div class="table-wrap"><table><thead><tr><th>Term</th><th>Definition</th></tr></thead><tbody><tr><td><code>EHR</code></td><td>Electronic Health Record, a digital system that stores patient health information.</td></tr><tr><td><code>FHIR</code></td><td>Fast Healthcare Interoperability Resources, a standard for exchanging healthcare information electronically.</td></tr><tr><td><code>SMART on FHIR</code></td><td>An authorization framework that allows apps to securely connect with EHR systems using OAuth 2.0.</td></tr><tr><td><code>PHI</code></td><td>Protected Health Information, data that can identify a patient and relates to health, care, or payment.</td></tr><tr><td><code>Observation</code></td><td>A FHIR resource commonly used for lab results, vitals, and clinical measurements.</td></tr></tbody></table></div>
+        </div>
+      </section>
+
+      <footer>
+        <div>Samuel Owusu · Technical Communication Portfolio · EHR Patient API Documentation</div>
+        <div>Built with HTML, CSS, JavaScript · GitHub Pages</div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    function showView(name, el) {
+      document.querySelectorAll('.view').forEach(view => view.classList.remove('active'));
+      document.getElementById('view-' + name).classList.add('active');
+      document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+      if (el && el.tagName === 'A') el.classList.add('active');
+      document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+      const side = Array.from(document.querySelectorAll('.sidebar a')).find(a => a.getAttribute('href') === '#' + name);
+      if (side) side.classList.add('active');
+      history.replaceState(null, '', '#' + name);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchTab(btn, id) {
+      const parent = btn.closest('.section');
+      parent.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      parent.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(id).classList.add('active');
+    }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toISOString().slice(11, 19) + ' UTC';
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    const initial = location.hash.replace('#', '') || 'home';
+    if (document.getElementById('view-' + initial)) showView(initial, document.querySelector('nav a[href="#' + initial + '"]'));
+  </script>
+</body>
+</html>
